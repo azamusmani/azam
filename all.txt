@@ -1,4 +1,7 @@
- Fork() 
+
+// 1.SYSTEM CALLS----------------------------------------------------------------------------------------
+
+                                             Fork() 
 #include<stdio.h>
 #include<sys/wait.h>
 #include<sys/types.h>
@@ -122,6 +125,8 @@ int main()
     return 0; // Exit with success
 }
 
+
+
 // 2.SCHEDULING ALGORITHMS ---------------------------------------------------------------------------
 
 //2.1FCFS *******************************************
@@ -214,7 +219,11 @@ int main(){
     return 0;
 }
 
-//2.2 SJF *******************************************************
+// INPUT - AT {2,5,0,0,7}
+//         BT {2,6,4,7,4}
+           
+
+//2.2 SRTF (Preemptive) *******************************************************
 
 #include<iostream>
 using namespace std;
@@ -323,6 +332,9 @@ int main(){
     
     return 0;
 }
+
+// INPUT - AT {0,1,2,4}
+//         BT {5,3,4,1}
 
 //2.3 ROUND ROBIN *******************************************************
 
@@ -1016,6 +1028,11 @@ int main()
     return 0;
 }
 
+// INPUT - alloc     {0,1,0; 2,0,0; 3,0,2; 2,1,1; 0,0,2}
+//         max       {7,5,3; 3,2,2; 9,0,2; 2,2,2; 4,3,3}
+//         available {3,3,2}
+
+
 
 // 6. MEMORY ALLOCATION -----------------------------------------------------------------------------------
 
@@ -1213,6 +1230,7 @@ int main()
 
     int process[] = {100, 500, 200, 300, 600};
     int block[] = {200, 400, 300, 250, 150};
+    
     int p = sizeof(process) / sizeof(process[0]);
     int b = sizeof(block) / sizeof(block[0]);
 
@@ -1228,6 +1246,11 @@ int main()
     cout<<"Next Fit Allocation\n";
     nextFit(process, block, p, b);
 }
+
+//INPUT - process  {100, 500, 200, 300, 600}
+//        block    {200, 400, 300, 250, 150}
+
+
 
 
 // 7. PAGE REPLACEMENT ALGO --------------------------------------------------------------------------------------
@@ -1286,57 +1309,103 @@ int main()
     return 0;
 }
 
+// INPUT - String: 1 3 0 3 5 2 4 5 3 2 1 0 5
+// OUTPUT- Faults: 10     
+//         Hits: 3
+
+
 // 7.2 LRU *********************************************************
 
-#include <iostream>
-#include <queue>
-#include <unordered_set>
-#include <climits>
-using namespace std;
-
-void pageFaultsAndHits(int pages[], int n, int capacity, int& page_faults, int& hits) {
-    queue<int> q;
-    unordered_set<int> s;
-    page_faults = 0;
-    hits = 0;
-
-    for (int i = 0; i < n; i++) {
-        if (s.find(pages[i]) == s.end()) {
-            if (q.size() == capacity) {
-                int lru = q.front();
-                q.pop();
-                s.erase(lru);
-            }
-            s.insert(pages[i]);
-            q.push(pages[i]);
-            page_faults++;
-        } else {
-            hits++;
-        }
-    }
-}
+#include<stdio.h>
 
 int main() {
-    int n;
-    cout << "Enter the number of pages: ";
-    cin >> n;
-
-    int pages[n];
-    cout << "Enter the page sequence: ";
-    for (int i = 0; i < n; i++) {
-        cin >> pages[i];
+    int m, n, position, k, l;
+    int a = 0, b = 0, page_fault = 0;
+    int total_frames = 3;
+    int frames[total_frames];
+    int temp[total_frames];
+    
+    int total_pages;
+    
+    printf("Enter the total number of pages: ");
+    scanf("%d", &total_pages);
+    int pages[total_pages];
+    printf("Enter the page reference string: ");
+    for (n = 0; n < total_pages; n++) {
+        scanf("%d", &pages[n]);
     }
-
-    int capacity;
-    cout << "Enter the capacity of the memory: ";
-    cin >> capacity;
-
-    int page_faults, hits;
-    pageFaultsAndHits(pages, n, capacity, page_faults, hits);
-    cout << "Number of page faults: " << page_faults << endl;
-    cout << "Number of hits: " << hits << endl;
+    
+    printf("Frame 1 \t Frame 2 \t Frame 3 \n "); // header
+    
+    // Initialize frames to -1 (indicating empty)
+    for (m = 0; m < total_frames; m++) {
+        frames[m] = -1;
+    }
+    
+    // Iterate over each page in the page reference string
+    for (n = 0; n < total_pages; n++) {
+        a = 0, b = 0;
+        
+        // Check if the page is already in a frame
+        for (m = 0; m < total_frames; m++) {
+            if (frames[m] == pages[n]) {
+                a = 1;
+                b = 1;
+                break;
+            }
+        }
+        
+        // If the page is not in any frame, find a free frame
+        if (a == 0) {
+            for (m = 0; m < total_frames; m++) {
+                if (frames[m] == -1) {
+                    frames[m] = pages[n];
+                    b = 1;
+                    page_fault++;
+                    break;
+                }
+            }
+        }
+        
+        // If all frames are occupied, find the least recently used page and replace it
+        if (b == 0) {
+            for (m = 0; m < total_frames; m++) {
+                temp[m] = 0;
+            }
+            for (k = n - 1, l = 1; l <= total_frames - 1; l++, k--) {
+                for (m = 0; m < total_frames; m++) {
+                    if (frames[m] == pages[k]) {
+                        temp[m] = 1;
+                    }
+                }
+            }
+            for (m = 0; m < total_frames; m++) {
+                if (temp[m] == 0)
+                    position = m;
+            }
+            frames[position] = pages[n];
+            page_fault++;
+        }
+        
+        // Print the current state of frames after processing each page
+        for (m = 0; m < total_frames; m++) {
+            printf("%d\t", frames[m]);
+        }
+        printf("\n");
+    }
+    
+    // Print the total number of page faults and page hits
+    printf("\nTotal Page Faults:\t%d\n", page_fault);
+    printf("\nTotal Page Hits:\t%d\n", total_pages - page_fault);
+    
     return 0;
 }
+
+// INPUT - String: 1 3 0 3 5 2 4 5 3 2 1 0 5
+// OUTPUT- Faults: 11   
+//         Hits: 2
+
+
 
 // 7.3 OPTIMAL ******************************************************
 
@@ -1479,6 +1548,10 @@ int main(){
     return 0;
 }
 
+//Enter the current position of head: 50
+//Enter the number of requests: 8
+//Enter the request order: 95, 180, 34, 119, 11, 123, 62, 64
+
 // 8.2 SSTF **********************************************************
 
 #include<iostream>
@@ -1492,7 +1565,7 @@ void SSTF(int n, int arr[], int start) {
     cout << "Seek sequence: " << start << " "; // Print initial position
     
     for (int i = 0; i < n; i++) {
-        int min_distance = INT_MAX;
+        int min_distance = 9999;
         int next_track;
         
         // Find the track with minimum distance from the current position
@@ -1544,6 +1617,12 @@ int main() {
     SSTF(n, arr, start);
     return 0;
 }
+
+//Enter the current position of head: 50
+//Enter the number of requests: 8
+//Enter the request order: 95, 180, 34, 119, 11, 123, 62, 64
+
+
 
 // 8.3 SSTF, SCAN, C-SCAN ********************************************************
 

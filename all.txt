@@ -1,0 +1,1634 @@
+
+// 1.SYSTEM CALLS----------------------------------------------------------------------------------------
+
+#include <bits/stdc++.h>
+#include <sys/wait.h>
+using namespace std;
+
+int main(int count, char *argv[]) {
+    // Fork a new process
+    pid_t p = fork();
+
+
+    if (p < 0) {
+        cout << "Fork Unsuccessful\n";
+        exit(0);
+    } else if (p == 0) {
+        
+        string option = argv[1];
+
+        if (option == "cp") {
+            
+            execlp("/bin/cp", "cp", argv[2], argv[3], NULL);
+        } else if (option == "ls") {
+           
+            execlp("/bin/ls", "ls", NULL);
+        } else if (option == "grep") {
+           
+            execlp("/bin/grep", "grep", argv[2], argv[3], argv[4], NULL);
+        }
+    }
+
+    cout << "Parent Process ID: " << getpid() << endl;
+    cout << "Child Process ID: " << p << endl;
+   
+    waitpid(p, NULL, 0); 
+    cout << "Child process completed\n";
+
+    return 0;
+}
+
+
+// 2.SCHEDULING ALGORITHMS ---------------------------------------------------------------------------
+
+//2.1FCFS *******************************************
+
+#include<iostream>
+using namespace std;
+
+int main(){
+    int n;
+    cout<<"Enter number of processes : ";
+    cin>>n;
+    
+    int pid[n];
+    int at[n];
+    int bt[n];
+    cout<<"Enter the arrival time for processes : ";
+    for(int i=0; i<n; i++){
+        pid[i] = i+1;
+        cin>>at[i];
+    }
+    cout<<"Enter the burst time for processes : ";
+    for(int i=0; i<n; i++){
+        cin>>bt[i];
+    }
+    
+    for(int i=0; i<n; i++){
+        int pos = i;
+        for(int j=i+1; j<n; j++){
+            if(at[j]<at[pos]){
+                pos = j;
+            }
+        }
+        
+        int temp = at[i];
+        at[i] = at[pos];
+        at[pos] = temp;
+        
+        int temp1 = bt[i];
+        bt[i] = bt[pos];
+        bt[pos] = temp1;
+        
+        int temp2 = pid[i];
+        pid[i] = pid[pos];
+        pid[pos] = temp2;
+    }
+    
+    int wt[n];
+    int tat[n];
+    int ct[n];
+    ct[0] = bt[0];
+    
+    for(int i=1; i<n; i++){
+        ct[i] = ct[i-1] + bt[i];
+    }
+    for(int i=0; i<n; i++){
+        tat[i] = ct[i] - at[i];
+    }
+    for(int i=0; i<n; i++){
+        wt[i] = tat[i] - bt[i];
+    }
+    
+    float total_ct=0;
+    float total_tat=0;
+    float total_wt=0;
+    
+    for(int i=0; i<n; i++){
+        total_ct = total_ct + ct[i];
+    }
+    for(int i=0; i<n; i++){
+        total_tat = total_tat + tat[i];
+    }
+    for(int i=0; i<n; i++){
+        total_wt = total_wt + wt[i];
+    }
+    
+    float avg_tat;
+    float avg_wt;
+    
+    avg_tat = total_tat/n;
+    avg_wt = total_wt/n;
+    
+    cout<<"PID"<<"\t\t"<<"AT"<<"\t\t"<<"BT"<<"\t\t"<<"CT"<<"\t\t"<<"TAT"<<"\t\t"<<"WT"<<endl;
+    for(int i=0; i<n; i++){
+        cout<<pid[i]<<"\t\t"<<at[i]<<"\t\t"<<bt[i]<<"\t\t"<<ct[i]<<"\t\t"<<tat[i]<<"\t\t"<<wt[i]<<endl;
+    }
+    cout<<"Total completion time : "<<total_ct<<" units\n";
+    cout<<"Average Turnaround Time : "<<avg_tat<<endl;
+    cout<<"Average Waiting Time : "<<avg_wt<<endl;
+    
+    return 0;
+}
+
+//2.2 SJF *******************************************************
+
+#include<iostream>
+using namespace std;
+
+int main(){
+    int n;
+    cout<<"Enter number of processes : ";
+    cin>>n;
+    
+    int pid[n];
+    int at[n];
+    int bt[n];
+    cout<<"Enter the arrival time for processes : ";
+    for(int i=0; i<n; i++){
+        pid[i] = i+1;
+        cin>>at[i];
+    }
+    cout<<"Enter the burst time for processes : ";
+    for(int i=0; i<n; i++){
+        cin>>bt[i];
+    }
+    
+    for(int i=0; i<n; i++){
+        int pos = i;
+        for(int j=i+1; j<n; j++){
+            if(at[j]<at[pos]){
+                pos = j;
+            }
+        }
+        
+        int temp = at[i];
+        at[i] = at[pos];
+        at[pos] = temp;
+        
+        int temp1 = bt[i];
+        bt[i] = bt[pos];
+        bt[pos] = temp1;
+        
+        int temp2 = pid[i];
+        pid[i] = pid[pos];
+        pid[pos] = temp2;
+    }
+    
+    int ct[n];
+    int wt[n];
+    int tat[n];
+    int rt[n];
+    
+    for(int i=0; i<n; i++){
+        rt[i] = bt[i];
+    }
+    
+    int complete=0;
+    int shortest=0;
+    int current_time=0;
+    int minburst=9999;
+    
+    while(complete!=n){
+        minburst = 9999;
+        for(int i=0; i<n; i++){
+            if(at[i]<=current_time && rt[i]<minburst && rt[i]>0){
+                minburst = rt[i];
+                shortest = i;
+            }
+        }
+        
+        rt[shortest]--;
+        
+        if(rt[shortest]==0){
+            complete++;
+            ct[shortest] = current_time + 1;
+            tat[shortest] = ct[shortest] - at[shortest];
+            wt[shortest] = tat[shortest] - bt[shortest];
+        }
+        
+        current_time++;
+    }
+
+    float total_ct=0;
+    float total_tat=0;
+    float total_wt=0;
+    
+    for(int i=0; i<n; i++){
+        total_ct = total_ct + ct[i];
+    }
+    for(int i=0; i<n; i++){
+        total_tat = total_tat + tat[i];
+    }
+    for(int i=0; i<n; i++){
+        total_wt = total_wt + wt[i];
+    }
+    
+    float avg_tat;
+    float avg_wt;
+    
+    avg_tat = total_tat/n;
+    avg_wt = total_wt/n;
+    
+    cout<<"PID"<<"\t\t"<<"AT"<<"\t\t"<<"BT"<<"\t\t"<<"CT"<<"\t\t"<<"TAT"<<"\t\t"<<"WT"<<endl;
+    for(int i=0; i<n; i++){
+        cout<<pid[i]<<"\t\t"<<at[i]<<"\t\t"<<bt[i]<<"\t\t"<<ct[i]<<"\t\t"<<tat[i]<<"\t\t"<<wt[i]<<endl;
+    }
+    cout<<"Total completion time : "<<total_ct<<" units\n";
+    cout<<"Average Turnaround Time : "<<avg_tat<<endl;
+    cout<<"Average Waiting Time : "<<avg_wt<<endl;
+    
+    return 0;
+}
+
+//2.3 ROUND ROBIN *******************************************************
+
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    int n, tq;
+    cout << "Enter the number of processes : ";
+    cin >> n;
+    int process[n];
+    int arrival[n];
+    int burst[n];
+    vector<int> ct(n);
+
+    cout << "Enter the arrival time for processes : ";
+    for (int i = 0; i < n; i++) {
+        int x;
+        cin >> x;
+        process[i] = i + 1;
+        arrival[i] = x;
+    }
+
+    cout << "Enter the burst time for processes : ";
+    for (int i = 0; i < n; i++) {
+        int y;
+        cin >> y;
+        burst[i] = y;
+    }
+
+    cout << "Enter the time quantum : ";
+    cin >> tq;
+
+
+  //sort the process
+for(int i=0;i<n;i++){
+int pos = i;
+for(int j=i+1;j<n;j++){
+ if(arrival[j]<arrival[pos])
+     pos = j;
+ }
+
+ int temp;
+ temp = arrival[i];
+ arrival[i] = arrival[pos];
+ arrival[pos] = temp;
+
+ int temp1;
+ temp1 = burst[i];
+ burst[i] = burst[pos];
+ burst[pos] = temp1;
+
+ int temp2;
+ temp2 = process[i];
+ process[i] = process[pos];
+ process[pos] = temp2;
+}
+
+    // Round Robin scheduling
+    int wt[n] = {0};
+    int tt[n] = {0};
+    int inc = 0;
+    int remaining[n];
+    for (int i = 0; i < n; i++)
+        remaining[i] = burst[i];
+
+    while (true) {
+        bool done = true;
+        for (int i = 0; i < n; i++) {
+            if (remaining[i] > 0) {
+                done = false;
+                if (remaining[i] > tq) {
+                    inc += tq;
+                    remaining[i] -= tq;
+                } else {
+                    inc = inc + remaining[i];
+                    remaining[i] = 0;
+                    ct[i] = inc;
+                }
+            }
+        }
+        if (done == true)
+            break;
+    }
+
+   for(int i=0;i<n;i++){
+    //Turnaround time = waiting time + burst time or TAT = CT - AT
+     tt[i] = ct[i] - arrival[i];
+  }
+
+  for(int i=0;i<n;i++){
+    //waiting time = burst of prev + waiting time of prev  or TAT - BT
+     wt[i] = tt[i] - burst[i];
+  }
+
+  float totalct = 0;
+  for(int i=0;i<n;i++){
+    totalct += ct[i];
+  }
+ float totaltt = 0;
+  for(int i=0;i<n;i++){
+    totaltt += tt[i];
+  }
+  float totalwt = 0;
+  for(int i=0;i<n;i++){
+    totalwt += wt[i];
+  }
+
+   cout << "Process id\tArrival Time\tBurst Time\tCompletion Time\tTurnaround Time\tWaiting Time\n";
+    for (int i = 0; i < n; i++) {
+        cout << process[i] << "\t\t" << arrival[i] << "\t\t" << burst[i] << "\t\t" << ct[i] << "\t\t" << tt[i] << "\t\t" << wt[i] << endl;
+    }
+  cout<<"Total Completion time for process is : ";
+  cout<<totalct;
+  cout<<" milliseconds\n";
+  cout<<"Average Waiting time for process is : ";
+  float avgwt = totalwt/n;
+  cout<<avgwt;
+  cout<<"\n";
+  cout<<"Average Turnaround time for process is : ";
+  float avgtt = totaltt/n;
+  cout<<avgtt;
+  cout<<"\n";
+  return 0;
+}
+
+//2.4 PRIORITY ******************************************************
+
+#include<iostream>
+using namespace std;
+
+int main(){
+  int n;
+  cout<<"Enter the number of processes : ";
+  cin>>n;
+  int process[n];
+   int priority[n];
+    int burst[n];
+      int arrival[n];
+  cout<<"Enter the priority for processes : ";
+  for(int i=0;i<n;i++){
+     int x;
+     cin>>x;
+     process[i] = i+1;
+     priority[i] = x;
+  }
+  cout<<"Enter the arrival time for processes : ";
+  for(int i=0;i<n;i++){
+     int y;
+     cin>>y;
+     arrival[i] = y;
+  }
+
+  cout<<"Enter the burst time for processes : ";
+  for(int i=0;i<n;i++){
+     int y;
+     cin>>y;
+     burst[i] = y;
+  }
+
+  
+  // Sort the processes
+  for(int i = 0; i < n; i++) {
+      int pos = i;
+      for(int j = i + 1; j < n; j++) {
+          if(priority[j] < priority[pos] || (priority[j] == priority[pos] && arrival[j] < arrival[pos])) {
+              pos = j;
+          }
+      }
+
+      // Swap priority
+      int temp = priority[i];
+      priority[i] = priority[pos];
+      priority[pos] = temp;
+
+      // Swap burst
+      temp = burst[i];
+      burst[i] = burst[pos];
+      burst[pos] = temp;
+
+      // Swap process
+      temp = process[i];
+      process[i] = process[pos];
+      process[pos] = temp;
+
+      // Swap arrival
+      temp = arrival[i];
+      arrival[i] = arrival[pos];
+      arrival[pos] = temp;
+  }
+
+  int wt[n];
+  int tt[n];
+  wt[0] = 0;
+  for(int i=1;i<n;i++){
+     wt[i] = burst[i-1] + wt[i-1];
+  }
+  for(int i=0;i<n;i++){
+     tt[i] = wt[i] + burst[i];
+  }
+    float totalwt = 0;
+  for(int i=0;i<n;i++){
+    totalwt += wt[i];
+  }
+  float totaltt = 0;
+  for(int i=0;i<n;i++){
+    totaltt += tt[i];
+  }
+   cout<<"Process id"<<"\t"<<"Arrival Time"<<"\t"<<"Priority"<<"\t"<<"Burst Time"<<"\t"<<"Waiting Time"<<"\t"<<"Tunraround Time"<<endl;
+   for(int i=0;i<n;i++){
+    cout<<process[i]<<"\t\t"<<arrival[i]<<"\t\t"<<priority[i]<<"\t\t"<<burst[i]<<"\t\t"<<wt[i]<<"\t\t"<<tt[i]<<endl;
+  }
+  cout<<"Average Waiting time for process is : ";
+  float avgwt = totalwt/n;
+  cout<<avgwt;
+  cout<<"\n";
+  cout<<"Average Turnaround time for process is : ";
+  float avgtt = totaltt/n;
+  cout<<avgtt;
+  cout<<"\n";
+  return 0;
+}
+
+// 3.IPC PIPES-------------------------------------------------------------------------------------------------------
+
+#include <iostream>
+#include <unistd.h>
+#include <cstring>
+using namespace std;
+
+int main()
+{
+    int pipe1[2], pipe2[2];
+    int status1, status2;
+    int pid = 0;
+    int maxLen = 20;
+    char readmessage[maxLen];
+    char pipe1writemessage[maxLen];
+    char pipe2writemessage[maxLen];
+    int n;
+
+    cout << "Enter number of messages: ";
+    cin >> n;
+    cin.ignore();
+
+    status1 = pipe(pipe1);
+    status2 = pipe(pipe2);
+    if (status1 == -1 || status2 == -1)
+        cout << "error creating pipe";
+
+    pid = fork();
+    if (pid != 0)
+    { // parent proces
+        close(pipe1[0]);
+        close(pipe2[1]);
+        for (int i = 0; i < n; i++)
+        {
+            cout << "Enter message" << i + 1 << " from parent:";
+            cin.getline(pipe1writemessage, maxLen);
+
+            cout << "In parent: Writing to pipe 1 -> :" << pipe1writemessage << endl;
+            write(pipe1[1], pipe1writemessage, strlen(pipe1writemessage) + 1);
+
+            read(pipe2[0], readmessage, sizeof(readmessage));
+            cout << "In parent - Reading child message ->: " << readmessage << endl;
+        }
+    }
+    else
+    { // child process
+
+        close(pipe1[1]);
+        close(pipe2[0]);
+        for (int i = 0; i < n; i++)
+        {
+            read(pipe1[0], readmessage, sizeof(readmessage));
+            cout << "In Child: reading message from parent ->: " << readmessage << endl;
+            cout << "Enter Child's messaage: " << endl;
+            cin.getline(pipe2writemessage, maxLen);
+
+            cout << "Writing in child : " << pipe2writemessage << endl;
+            write(pipe2[1], pipe2writemessage, strlen(pipe2writemessage) + 1);
+        }
+    }
+    return 0;
+}
+
+// 4.READER-WRITER SYNCHRONIZATION -------------------------------------------------------------------
+
+// 4.1 W SYNC *********************************** 
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+#define ARRAY_SIZE 5
+int shared_array[ARRAY_SIZE] = {1, 2, 3, 4, 5}; // Initial array values
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond_reader = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cond_writer = PTHREAD_COND_INITIALIZER;
+int readers_count = 0;
+int writers_count = 0;
+
+// Function prototypes
+void *reader(void *arg);
+void *writer(void *arg);
+void runSynchronized(int numReaders, int numWriters);
+
+int main() {
+    int numReaders, numWriters;
+    printf("Enter the number of readers: ");
+    scanf("%d", &numReaders);
+    printf("Enter the number of writers: ");
+    scanf("%d", &numWriters);
+    runSynchronized(numReaders, numWriters);
+    return 0;
+}
+
+// Reader function
+void *reader(void *arg) {
+    int reader_id = *((int *)arg);
+    pthread_mutex_lock(&mutex);
+    while (writers_count > 0) {
+        printf("Reader %d is waiting because a writer is writing\n", reader_id);
+        pthread_cond_wait(&cond_reader, &mutex);
+    }
+    readers_count++;
+    pthread_mutex_unlock(&mutex);
+
+    // Calculate the sum of array elements
+    int sum = 0;
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        sum += shared_array[i];
+    }
+
+    printf("Reader %d calculated the sum of array elements: %d\n", reader_id, sum);
+    sleep(1);
+
+    pthread_mutex_lock(&mutex);
+    readers_count--;
+    if (readers_count == 0) {
+        pthread_cond_signal(&cond_writer);
+    }
+    pthread_mutex_unlock(&mutex);
+
+    printf("Reader %d completed reading, CS is free\n", reader_id);
+    return NULL;
+}
+
+// Writer function
+void *writer(void *arg) {
+    int writer_id = *((int *)arg);
+    pthread_mutex_lock(&mutex);
+    writers_count++;
+    while (readers_count > 0 || writers_count > 1) {
+        printf("Writer %d is blocked from writing\n", writer_id);
+        pthread_cond_wait(&cond_writer, &mutex);
+    }
+    pthread_mutex_unlock(&mutex);
+
+    // Modify array values
+    int factor = 2;
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        shared_array[i] *= factor;
+    }
+
+    printf("Writer %d multiplied array elements by %d\n", writer_id, factor);
+    sleep(1);
+
+    pthread_mutex_lock(&mutex);
+    writers_count--;
+    pthread_cond_signal(&cond_writer);
+    pthread_cond_broadcast(&cond_reader);
+    pthread_mutex_unlock(&mutex);
+
+    printf("Writer %d completed writing, CS is free\n", writer_id);
+    return NULL;
+}
+
+// Run the program in synchronized mode
+void runSynchronized(int numReaders, int numWriters) {
+    pthread_t readers[numReaders];
+    pthread_t writers[numWriters];
+    int i, reader_ids[numReaders], writer_ids[numWriters];
+    for (i = 0; i < numReaders; i++) {
+        reader_ids[i] = i + 1;
+    }
+    for (i = 0; i < numWriters; i++) {
+        writer_ids[i] = i + 1;
+    }
+    printf("Running in synchronized mode.\n");
+
+    // Reader-Reader (RR) case
+    printf("\nReader-Reader (RR) case:\n");
+    for (i = 0; i < numReaders; i++) {
+        pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
+    }
+    for (i = 0; i < numReaders; i++) {
+        pthread_join(readers[i], NULL);
+    }
+
+    // Reader-Writer (RW) case
+    printf("\nReader-Writer (RW) case:\n");
+    pthread_create(&readers[0], NULL, reader, &reader_ids[0]);
+    pthread_create(&writers[0], NULL, writer, &writer_ids[0]);
+    pthread_join(readers[0], NULL);
+    pthread_join(writers[0], NULL);
+    
+    // Writer-Reader (WR) case
+    printf("\nWriter-Reader (WR) case:\n");
+    pthread_create(&writers[0], NULL, writer, &writer_ids[0]);
+    pthread_create(&readers[0], NULL, reader, &reader_ids[0]);
+    pthread_join(readers[0], NULL);
+    pthread_join(writers[0], NULL);
+
+    // Writer-Writer (WW) case
+    printf("\nWriter-Writer (WW) case:\n");
+    for (i = 0; i < numWriters; i++) {
+        pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
+    }
+    for (i = 0; i < numWriters; i++) {
+        pthread_join(writers[i], NULL);
+    }
+}
+
+
+// 4.2 W/0 SYNC ******************************************** 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <semaphore.h>
+
+#define ARRAY_SIZE 5
+
+int shared_array[ARRAY_SIZE] = {1, 2, 3, 4, 5}; // Initial array values
+sem_t mutex, wrt;
+
+// Function prototypes
+void *reader(void *arg);
+void *writer(void *arg);
+void runAsynchronously(int numReaders, int numWriters);
+
+int main() {
+    int numReaders, numWriters;
+    printf("Enter the number of readers: ");
+    scanf("%d", &numReaders);
+    printf("Enter the number of writers: ");
+    scanf("%d", &numWriters);
+    runAsynchronously(numReaders, numWriters);
+    return 0;
+}
+
+// Reader function
+void *reader(void *arg) {
+    int reader_id = *((int *)arg);
+
+    sem_wait(&mutex);
+    if (shared_array[0] == -1) {
+        sem_post(&mutex);
+        printf("Reader %d is waiting because a writer is writing\n", reader_id);
+        sem_wait(&mutex);
+    }
+    sem_post(&mutex);
+
+    // Calculate the sum of array elements
+    int sum = 0;
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        sum += shared_array[i];
+    }
+
+    printf("Reader %d calculated the sum of array elements: %d\n", reader_id, sum);
+    sleep(1);
+
+    sem_wait(&mutex);
+    sem_post(&mutex);
+
+    printf("Reader %d completed reading, CS is free\n", reader_id);
+    return NULL;
+}
+
+// Writer function
+void *writer(void *arg) {
+    int writer_id = *((int *)arg);
+
+    sem_wait(&wrt);
+    // Modify array values
+    int factor = 2;
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        shared_array[i] *= factor;
+    }
+    printf("Writer %d multiplied array elements by %d\n", writer_id, factor);
+    sleep(1);
+    shared_array[0] = -1; // Indicates that a writer is currently writing
+    sem_post(&wrt);
+
+    sem_wait(&mutex);
+    shared_array[0] = 1; // Indicates that no writer is currently writing
+    sem_post(&mutex);
+
+    printf("Writer %d completed writing, CS is free\n", writer_id);
+    return NULL;
+}
+
+// Run the program asynchronously
+void runAsynchronously(int numReaders, int numWriters) {
+    pthread_t readers[numReaders];
+    pthread_t writers[numWriters];
+    int i, reader_ids[numReaders], writer_ids[numWriters];
+    for (i = 0; i < numReaders; i++) {
+        reader_ids[i] = i + 1;
+    }
+    for (i = 0; i < numWriters; i++) {
+        writer_ids[i] = i + 1;
+    }
+    
+    sem_init(&mutex, 0, 1);
+    sem_init(&wrt, 0, 1);
+
+    printf("Running asynchronously.\n");
+
+    // Reader-Reader (RR) case
+    printf("\nReader-Reader (RR) case:\n");
+    for (i = 0; i < numReaders; i++) {
+        pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
+    }
+    for (i = 0; i < numReaders; i++) {
+        pthread_join(readers[i], NULL);
+    }
+
+    // Reader-Writer (RW) case
+    printf("\nReader-Writer (RW) case:\n");
+    pthread_create(&readers[0], NULL, reader, &reader_ids[0]);
+    pthread_create(&writers[0], NULL, writer, &writer_ids[0]);
+    pthread_join(readers[0], NULL);
+    pthread_join(writers[0], NULL);
+
+    // Writer-Writer (WW) case
+    printf("\nWriter-Writer (WW) case:\n");
+    for (i = 0; i < numWriters; i++) {
+        pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
+    }
+    for (i = 0; i < numWriters; i++) {
+        pthread_join(writers[i], NULL);
+    }
+
+    // Writer-Reader (WR) case
+    printf("\nWriter-Reader (WR) case:\n");
+    pthread_create(&writers[0], NULL, writer, &writer_ids[0]);
+    pthread_create(&readers[0], NULL, reader, &reader_ids[0]);
+    pthread_join(readers[0], NULL);
+    pthread_join(writers[0], NULL);
+
+    sem_destroy(&mutex);
+    sem_destroy(&wrt);
+}
+
+
+// 5. BANKERS ALGORITHM ------------------------------------------------------------------------------ 
+
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int num_processes, num_resources;
+
+    cout << "Enter the number of processes: ";
+    cin >> num_processes;
+
+    cout << "Enter the number of resources: ";
+    cin >> num_resources;
+
+    // Allocation Matrix
+    int allocation[num_processes][num_resources];
+    cout << "Enter the allocation matrix:" << endl;
+    for (int i = 0; i < num_processes; i++) {
+        cout << "For process " << i << ": ";
+        for (int j = 0; j < num_resources; j++) {
+            cin >> allocation[i][j];
+        }
+    }
+
+    // Maximum Matrix
+    int max[num_processes][num_resources];
+    cout << "Enter the maximum matrix:" << endl;
+    for (int i = 0; i < num_processes; i++) {
+        cout << "For process " << i << ": ";
+        for (int j = 0; j < num_resources; j++) {
+            cin >> max[i][j];
+        }
+    }
+
+    // Available Resources
+    int available[num_resources];
+    cout << "Enter the available resources:" << endl;
+    for (int i = 0; i < num_resources; i++) {
+        cout << "For resource " << i << ": ";
+        cin >> available[i];
+    }
+
+    // Print Allocation Matrix
+    cout << "Allocation Matrix:" << endl;
+    for (int i = 0; i < num_processes; i++) {
+        cout << "Process " << i << ": ";
+        for (int j = 0; j < num_resources; j++) {
+            cout << allocation[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    // Print Maximum Matrix
+    cout << "Maximum Matrix:" << endl;
+    for (int i = 0; i < num_processes; i++) {
+        cout << "Process " << i << ": ";
+        for (int j = 0; j < num_resources; j++) {
+            cout << max[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    // Calculate Need Matrix
+    int need[num_processes][num_resources];
+    for (int i = 0; i < num_processes; i++) {
+        for (int j = 0; j < num_resources; j++) {
+            need[i][j] = max[i][j] - allocation[i][j];
+        }
+    }
+
+    // Print Need Matrix
+    cout << "Need Matrix:" << endl;
+    for (int i = 0; i < num_processes; i++) {
+        cout << "Process " << i << ": ";
+        for (int j = 0; j < num_resources; j++) {
+            cout << need[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    // Safety Algorithm
+    int finished[num_processes], safe_sequence[num_processes], ind = 0;
+    for (int i = 0; i < num_processes; i++) {
+        finished[i] = 0;
+    }
+    int y = 0;
+    for (int i = 0; i < num_processes; i++) {
+        for (int j = 0; j < num_processes; j++) {
+            if (finished[j] == 0) {
+
+                int safe_flag = 0;
+                for (int k = 0; k < num_resources; k++) {
+                    if (need[j][k] > available[k]) {
+                        safe_flag = 1;
+                        break;
+                    }
+                }
+
+                if (safe_flag == 0) {
+                    safe_sequence[ind++] = j;
+                    for (y = 0; y < num_resources; y++)
+                        available[y] += allocation[j][y];
+                    finished[j] = 1;
+                }
+            }
+        }
+    }
+
+    int is_safe = 1;
+
+    // Check if sequence is safe or not
+    for (int i = 0; i < num_processes; i++) {
+        if (finished[i] == 0) {
+            is_safe = 0;
+            cout << "The given sequence is not safe";
+            break;
+        }
+    }
+
+    if (is_safe == 1) {
+        cout << "Following is the SAFE Sequence" << endl;
+        for (int i = 0; i < num_processes - 1; i++)
+            cout << " P" << safe_sequence[i] << " ->";
+        cout << " P" << safe_sequence[num_processes - 1] << endl;
+    }
+
+    return 0;
+}
+
+
+// 6. MEMORY ALLOCATION -----------------------------------------------------------------------------------
+
+#include <iostream>
+using namespace std;
+
+void firstFit(int process[], int block[], int p, int b)
+{
+    int memoryCopy[b], allocatedProcess[p], allocatedBlock[b];
+
+    for (int i = 0; i < b; i++)
+    {
+        memoryCopy[i] = block[i];
+        allocatedBlock[i] = -1;
+    }
+    for (int i = 0; i < p; i++)
+    {
+        allocatedProcess[i] = -1;
+    }
+
+    for (int i = 0; i < p; i++)
+    {
+        for (int j = 0; j < b; j++)
+        {
+            if (process[i] <= memoryCopy[j] && allocatedBlock[j] == -1)
+            {
+                allocatedProcess[i] = j;
+                allocatedBlock[j] = 1;
+                memoryCopy[j] -= process[i];
+                break;
+            }
+        }
+    }
+
+    cout << "P No.\tProcess Size\tBlock no. \t Block Size\n";
+    for (int i = 0; i < p; i++)
+    {
+        cout << "p"<<i << " \t" << process[i] << "\t";
+        if (allocatedProcess[i] != -1)
+            cout << "B"<<allocatedProcess[i] << "\t\t" << block[allocatedProcess[i]] << "\n";
+        else
+            cout << "Not Allocated\n";
+    }
+}
+
+void bestFit(int process[], int block[], int p, int b)
+{
+    int memoryCopy[b], allocatedProcess[p], allocatedBlock[b];
+
+    for (int i = 0; i < b; i++)
+    {
+        memoryCopy[i] = block[i];
+        allocatedBlock[i] = -1;
+    }
+    for (int i = 0; i < p; i++)
+    {
+        allocatedProcess[i] = -1;
+    }
+
+    for (int i = 0; i < p; i++)
+    {
+        int bestindex = -1;
+        for (int j = 0; j < b; j++)
+        {
+            if (process[i] <= memoryCopy[j] && allocatedBlock[j] == -1)
+            {
+                if (bestindex == -1)
+                    bestindex = j;
+                else if (memoryCopy[bestindex] > memoryCopy[j])
+                    bestindex = j;
+            }
+        }
+
+        if(bestindex != -1)
+        {
+            allocatedProcess[i] = bestindex;
+            memoryCopy[bestindex] -= process[i];
+            allocatedBlock[bestindex] = 1;
+        }
+    }
+
+    cout << "P No.\tProcess Size\tBlock no. \t Block Size\n";
+    for (int i = 0; i < p; i++)
+    {
+        cout << "p"<<i << " \t" << process[i] << "\t";
+        if (allocatedProcess[i] != -1)  
+            cout << "B"<<allocatedProcess[i] << "\t\t" << block[allocatedProcess[i]] << "\n";
+        else
+            cout << "Not Allocated\n";
+    }
+}
+
+void worstFit(int process[], int block[], int p, int b)
+{
+    int memoryCopy[b], allocatedProcess[p], allocatedBlock[b];
+
+    for (int i = 0; i < b; i++)
+    {
+        memoryCopy[i] = block[i];
+        allocatedBlock[i] = -1;
+    }
+    for (int i = 0; i < p; i++)
+        allocatedProcess[i] = -1;
+
+    for (int i = 0; i < p; i++)
+    {
+        int worstIndex = -1;
+        for (int j = 0; j < b; j++)
+        {
+            if (process[i] <= memoryCopy[j] && allocatedBlock[j] == -1)
+            {
+                if (worstIndex == -1)
+                    worstIndex = j;
+                else if (memoryCopy[worstIndex] < memoryCopy[j])
+                    worstIndex = j;
+            }
+        }
+
+        if(worstIndex != -1)
+        {
+            allocatedProcess[i] = worstIndex;
+            memoryCopy[worstIndex] -= process[i];
+            allocatedBlock[worstIndex] = 1;
+        }
+    }
+
+    cout << "P No.\tProcess Size\tBlock no. \t Block Size\n";
+    for (int i = 0; i < p; i++)
+    {
+        cout << "p"<<i << " \t" << process[i] << "\t";
+        if (allocatedProcess[i] != -1)
+            cout << "B"<<allocatedProcess[i] << "\t\t" << block[allocatedProcess[i]] << "\n";
+        else
+            cout << "Not Allocated\n";
+    }
+}
+void nextFit(int process[], int block[], int p, int b) {
+    int allocatedProcess[p], allocatedBlock[b], memoryCopy[b];
+
+    // Initialize allocation statuses
+    for (int i = 0; i < b; i++) {
+        allocatedBlock[i] = -1; // -1 indicates not allocated
+        memoryCopy[i] = block[i];
+    }
+    for (int i = 0; i < p; i++) {
+        allocatedProcess[i] = -1; // -1 indicates not allocated
+    }
+
+    int j = 0;
+    for (int i = 0; i < p; i++) {
+        int start = j;
+        do {
+            if (process[i] <= memoryCopy[j] && allocatedBlock[j] == -1) {
+                allocatedProcess[i] = j;
+                allocatedBlock[j] = i; // Store the process index in allocatedBlock
+                memoryCopy[j] -= process[i];
+                break;
+            }
+            j = (j + 1) % b;
+        } while (j != start);
+    }
+
+    cout << "P No.\tProcess Size\tBlock No.\tBlock Size\n";
+    for (int i = 0; i < p; i++) {
+        cout << "P" << i << "\t" << process[i] << "\t\t";
+        if (allocatedProcess[i] != -1) {
+            cout << "B" << allocatedProcess[i] << "\t\t" << block[allocatedProcess[i]] << "\n";
+        } else {
+            cout << "Not Allocated\n";
+        }
+    }
+}
+int main()
+{
+   /*
+    int p, b;
+    cout << "Enter no. of processes: ";
+    cin >> p;
+    cout << "Enter no. of blocks: ";
+    cin >> b;
+
+    int process[p], block[b];
+    cout << "Enter process size: ";
+    for (int i = 0; i < p; i++)
+    {
+        cin >> process[i];
+    }
+
+    cout << "Enter blocks size: ";
+    for (int i = 0; i < b; i++)
+    {
+        cin >> block[i];
+    }
+*/
+
+    int process[] = {100, 500, 200, 300, 600};
+    int block[] = {200, 400, 300, 250, 150};
+    int p = sizeof(process) / sizeof(process[0]);
+    int b = sizeof(block) / sizeof(block[0]);
+
+    cout << "First fit allocation\n";
+    firstFit(process, block, p, b);
+
+    cout << "Best Fit Allocation\n";
+    bestFit(process, block, p, b);
+
+    cout<<"Worst Fit Allocation\n";
+    worstFit(process, block, p, b);
+
+    cout<<"Next Fit Allocation\n";
+    nextFit(process, block, p, b);
+}
+
+
+// 7. PAGE REPLACEMENT ALGO --------------------------------------------------------------------------------------
+
+//7.1 FCFS **************************************************
+
+#include <bits/stdc++.h>
+using namespace std;
+
+int pageFaults(int pages[], int n, int frames)
+{
+    unordered_set<int> s;
+    queue<int> q;
+    int pFaults = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (s.size() < frames)
+        {
+            if (s.find(pages[i]) == s.end())
+            {
+                s.insert(pages[i]);
+                pFaults++;
+                q.push(pages[i]);
+            }
+        }
+        else
+        {
+            if (s.find(pages[i]) == s.end())
+            {
+                int val = q.front();
+                q.pop();
+                s.erase(val);
+                s.insert(pages[i]);
+                q.push(pages[i]);
+                pFaults++;
+            }
+        }
+    }
+    return pFaults;
+}
+int main()
+{
+    int n, frames;
+    cout << "Enter the number of pages:" << endl;
+    cin >> n;
+    int pages[n];
+    cout << "Enter the page reference string:";
+    for (int i = 0; i < n; i++)
+    {
+        cin >> pages[i];
+    }
+    cout << "Enter the number of frames: ";
+    cin >> frames;
+    cout << "Total page faults: " << pageFaults(pages, n, frames) << endl;
+
+    return 0;
+}
+
+// 7.2 LRU *********************************************************
+
+#include <iostream>
+#include <queue>
+#include <unordered_set>
+#include <climits>
+using namespace std;
+
+void pageFaultsAndHits(int pages[], int n, int capacity, int& page_faults, int& hits) {
+    queue<int> q;
+    unordered_set<int> s;
+    page_faults = 0;
+    hits = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (s.find(pages[i]) == s.end()) {
+            if (q.size() == capacity) {
+                int lru = q.front();
+                q.pop();
+                s.erase(lru);
+            }
+            s.insert(pages[i]);
+            q.push(pages[i]);
+            page_faults++;
+        } else {
+            hits++;
+        }
+    }
+}
+
+int main() {
+    int n;
+    cout << "Enter the number of pages: ";
+    cin >> n;
+
+    int pages[n];
+    cout << "Enter the page sequence: ";
+    for (int i = 0; i < n; i++) {
+        cin >> pages[i];
+    }
+
+    int capacity;
+    cout << "Enter the capacity of the memory: ";
+    cin >> capacity;
+
+    int page_faults, hits;
+    pageFaultsAndHits(pages, n, capacity, page_faults, hits);
+    cout << "Number of page faults: " << page_faults << endl;
+    cout << "Number of hits: " << hits << endl;
+    return 0;
+}
+
+// 7.3 OPTIMAL ******************************************************
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    int num_frames;
+    cout << "Enter the number of frames: ";
+    cin >> num_frames;
+
+    vector<int> frames(num_frames, -1);
+    vector<int> temp(num_frames, -1);
+
+    int num_pages;
+    cout << "Enter the number of pages in the input stream: ";
+    cin >> num_pages;
+
+    vector<int> inputStream(num_pages);
+    cout << "Enter the page numbers in the input stream: ";
+    for (int i = 0; i < num_pages; ++i) {
+        cin >> inputStream[i];
+    }
+
+    int faults = 0;
+
+    for (int i = 0; i < num_pages; ++i) {
+        bool flag1 = false, flag2 = false, flag3 = false;
+        int position, max_pos;
+
+        for (int j = 0; j < num_frames; ++j) {
+            if (frames[j] == inputStream[i]) {
+                flag1 = flag2 = true;
+                break;
+            }
+        }
+
+        if (!flag1) {
+            for (int j = 0; j < num_frames; ++j) {
+                if (frames[j] == -1) {
+                    faults++;
+                    frames[j] = inputStream[i];
+                    flag2 = true;
+                    break;
+                }
+            }
+        }
+
+        if (!flag2) {
+            for (int j = 0; j < num_frames; ++j) {
+                temp[j] = -1;
+
+                for (int k = i + 1; k < num_pages; ++k) {
+                    if (frames[j] == inputStream[k]) {
+                        temp[j] = k;
+                        break;
+                    }
+                }
+            }
+
+            for (int j = 0; j < num_frames; ++j) {
+                if (temp[j] == -1) {
+                    position = j;
+                    flag3 = true;
+                    break;
+                }
+            }
+
+            if (!flag3) {
+                max_pos = temp[0];
+                position = 0;
+
+                for (int j = 1; j < num_frames; ++j) {
+                    if (temp[j] > max_pos) {
+                        max_pos = temp[j];
+                        position = j;
+                    }
+                }
+            }
+
+            frames[position] = inputStream[i];
+            faults++;
+        }
+
+        cout << "\n";
+        for (int j = 0; j < num_frames; ++j) {
+            cout << frames[j] << "\t";
+        }
+    }
+
+    cout << "\n\nTotal Page Faults = " << faults;
+    cout << "\nTotal Hits = " << num_pages - faults << endl;
+
+    return 0;
+}
+
+
+// 8. DISK SCHEDULING ALGORITHM ----------------------------------------------------------------------------------
+
+//8.1 FCFS ******************************************************
+
+#include<iostream>
+using namespace std;
+
+void FCFS(int arr[], int n, int start){
+    
+    int seek_count=0;
+    int curr_track, distance;
+    for(int i=0; i<n; i++){
+        curr_track = arr[i];
+        distance = abs(start - curr_track);
+        seek_count += distance;
+        start = curr_track;
+    }
+    cout<<"Total number of seek operations : "<<seek_count<<endl;
+    cout<<"Seek Sequence : "<<endl;
+    for(int i=0; i<n; i++){
+        cout<<arr[i]<<endl;
+    }
+}
+
+int main(){
+    int n;
+    cout<<"Enter size of array : ";
+    cin>>n;
+    
+    int arr[n];
+    cout<<"Enter array elements : "<<endl;
+    for(int i=0; i<n; i++){
+        cin>>arr[i];
+    }
+    
+    int start;
+    cout<<"Enter the starting operation : ";
+    cin>>start;
+    
+    FCFS(arr, n, start);
+    return 0;
+}
+
+// 8.2 SSTF **********************************************************
+
+#include<iostream>
+#include<cstdlib> // for abs()
+using namespace std;
+
+void SSTF(int n, int arr[], int start) {
+    int seekCount = 0;
+    int curr_track = start;
+    int visited[n] = {0}; // Initialize all elements to 0, indicating not visited
+    cout << "Seek sequence: " << start << " "; // Print initial position
+    
+    for (int i = 0; i < n; i++) {
+        int min_distance = INT_MAX;
+        int next_track;
+        
+        // Find the track with minimum distance from the current position
+        for (int j = 0; j < n; j++) {
+            if (visited[j] == 0) { // If track has not been visited
+                int distance = abs(curr_track - arr[j]);
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    next_track = arr[j];
+                }
+            }
+        }
+        
+        // Find the index of next_track in arr[]
+        int next_track_index;
+        for (int k = 0; k < n; k++) {
+            if (arr[k] == next_track) {
+                next_track_index = k;
+                break;
+            }
+        }
+        
+        // Mark the selected track as visited
+        visited[next_track_index] = 1;
+        
+        // Update seek count and current position
+        seekCount += min_distance;
+        curr_track = next_track;
+        
+        // Print the current track in the sequence
+        cout << curr_track << " ";
+    }
+    
+    cout << endl;
+    cout << "Total number of seek operations: " << seekCount;
+}
+
+int main() {
+    int n, start;
+    cout << "Enter size of array: ";
+    cin >> n;
+    int arr[n];
+    cout << "Enter array elements: " << endl;
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+    cout << "Enter the starting operation: ";
+    cin >> start;
+    SSTF(n, arr, start);
+    return 0;
+}
+
+// 8.3 SSTF, SCAN, C-SCAN ********************************************************
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <climits>
+using namespace std;
+
+void SSTF(vector<int> &requests, int start)
+{
+    vector<int> sortedRequests = requests;
+    sort(sortedRequests.begin(), sortedRequests.end());
+
+    int seekCount = 0;
+    int currentTrack = start;
+
+    cout << "SSTF: Seek sequence: ";
+    while (!sortedRequests.empty())
+    {
+        int minDist = INT_MAX;
+        int minIndex = -1;
+
+        for (int i = 0; i < sortedRequests.size(); ++i)
+        {
+            int distance = abs(currentTrack - sortedRequests[i]);
+            if (distance < minDist)
+            {
+                minDist = distance;
+                minIndex = i;
+            }
+        }
+
+        seekCount += minDist;
+        currentTrack = sortedRequests[minIndex];
+        cout << currentTrack << " ";
+
+        sortedRequests.erase(sortedRequests.begin() + minIndex);
+    }
+
+    cout << "\nTotal number of seek operations (SSTF): " << seekCount << endl;
+}
+
+void SCAN(vector<int> &requests, int start, int direction, int maxCylinder)
+{
+    int seekCount = 0;
+    int currentTrack = start;
+    vector<int> sortedRequests = requests;
+    sortedRequests.push_back(0); // Add 0 as an edge
+
+    if (direction == 0) // Direction is left
+        sortedRequests.push_back(0);
+    else // Direction is right
+        sortedRequests.push_back(maxCylinder);
+
+    sort(sortedRequests.begin(), sortedRequests.end());
+
+    cout << "SCAN: Seek sequence: ";
+
+    int startIndex = find(sortedRequests.begin(), sortedRequests.end(), start) - sortedRequests.begin();
+
+    if (direction == 0)
+    {
+        for (int i = startIndex; i >= 0; --i)
+        {
+            cout << sortedRequests[i] << " ";
+            seekCount += abs(currentTrack - sortedRequests[i]);
+            currentTrack = sortedRequests[i];
+        }
+        for (int i = startIndex + 1; i < sortedRequests.size(); ++i)
+        {
+            cout << sortedRequests[i] << " ";
+            seekCount += abs(currentTrack - sortedRequests[i]);
+            currentTrack = sortedRequests[i];
+        }
+    }
+    else
+    {
+        for (int i = startIndex; i < sortedRequests.size(); ++i)
+        {
+            cout << sortedRequests[i] << " ";
+            seekCount += abs(currentTrack - sortedRequests[i]);
+            currentTrack = sortedRequests[i];
+        }
+        for (int i = startIndex - 1; i >= 0; --i)
+        {
+            cout << sortedRequests[i] << " ";
+            seekCount += abs(currentTrack - sortedRequests[i]);
+            currentTrack = sortedRequests[i];
+        }
+    }
+
+    cout << "\nTotal number of seek operations (SCAN): " << seekCount << endl;
+}
+
+void CSCAN(vector<int> &requests, int start, int direction, int maxCylinder)
+{
+    int seekCount = 0;
+    int currentTrack = start;
+    vector<int> sortedRequests = requests;
+    sortedRequests.push_back(0);           // Add 0 as an edge
+    sortedRequests.push_back(maxCylinder); // Add maxCylinder as an edge
+    sort(sortedRequests.begin(), sortedRequests.end());
+
+    cout << "CSCAN: Seek sequence: ";
+
+    int startIndex = find(sortedRequests.begin(), sortedRequests.end(), start) - sortedRequests.begin();
+
+    if (direction == 0)
+    {
+        for (int i = startIndex; i < sortedRequests.size(); ++i)
+        {
+            cout << sortedRequests[i] << " ";
+            seekCount += abs(currentTrack - sortedRequests[i]);
+            currentTrack = sortedRequests[i];
+        }
+        for (int i = 0; i < startIndex; ++i)
+        {
+            cout << sortedRequests[i] << " ";
+            seekCount += abs(currentTrack - sortedRequests[i]);
+            currentTrack = sortedRequests[i];
+        }
+    }
+    else
+    {
+        for (int i = startIndex; i >= 0; --i)
+        {
+            cout << sortedRequests[i] << " ";
+            seekCount += abs(currentTrack - sortedRequests[i]);
+            currentTrack = sortedRequests[i];
+        }
+        for (int i = sortedRequests.size() - 1; i > startIndex; --i)
+        {
+            cout << sortedRequests[i] << " ";
+            seekCount += abs(currentTrack - sortedRequests[i]);
+            currentTrack = sortedRequests[i];
+        }
+    }
+
+    cout << "\nTotal number of seek operations (CSCAN): " << seekCount << endl;
+}
+
+int main()
+{
+    int n, start, direction, maxCylinder;
+
+    cout << "Enter the number of requests: ";
+    cin >> n;
+    vector<int> requests(n);
+
+    cout << "Enter the requests: ";
+    for (int i = 0; i < n; ++i)
+        cin >> requests[i];
+
+    cout << "Enter the starting position: ";
+    cin >> start;
+
+    cout << "Enter the direction (0 for left, 1 for right): ";
+    cin >> direction;
+
+    cout << "Enter the maximum cylinder number: ";
+    cin >> maxCylinder;
+
+    SSTF(requests, start);
+    SCAN(requests, start, direction, maxCylinder);
+    CSCAN(requests, start, direction, maxCylinder);
+
+    return 0;
+}
+

@@ -1,43 +1,126 @@
+ Fork() 
+#include<stdio.h>
+#include<sys/wait.h>
+#include<sys/types.h>
+#include<unistd.h>
 
-// 1.SYSTEM CALLS----------------------------------------------------------------------------------------
+int main() {
+    pid_t p;
+    int w;
 
-#include <bits/stdc++.h>
-#include <sys/wait.h>
-using namespace std;
+    // Create a child process
+    p = fork();
 
-int main(int count, char *argv[]) {
-    // Fork a new process
-    pid_t p = fork();
+    if(p == 0) {
+        // Child process
+        printf("Child:- %d\n", getpid());
+        printf("Parent:- %d\n", getppid());
 
+        // Execute mycp.c program
+        execl("./mycp", "mycp.c", NULL);
+    } else {
+        // Parent process
+        printf("Child:- %d\n", p);
+        printf("Parent:- %d\n", getpid());
 
-    if (p < 0) {
-        cout << "Fork Unsuccessful\n";
-        exit(0);
-    } else if (p == 0) {
-        
-        string option = argv[1];
+        // Wait for the child process to finish
+        wait(&w);
 
-        if (option == "cp") {
-            
-            execlp("/bin/cp", "cp", argv[2], argv[3], NULL);
-        } else if (option == "ls") {
-           
-            execlp("/bin/ls", "ls", NULL);
-        } else if (option == "grep") {
-           
-            execlp("/bin/grep", "grep", argv[2], argv[3], argv[4], NULL);
-        }
+        // Execute mygrep.c program
+        execl("./mygrep", "mygrep.c", NULL);
     }
-
-    cout << "Parent Process ID: " << getpid() << endl;
-    cout << "Child Process ID: " << p << endl;
-   
-    waitpid(p, NULL, 0); 
-    cout << "Child process completed\n";
 
     return 0;
 }
 
+       mycp.c
+
+#include<stdio.h>
+#include<sys/wait.h>
+#include<sys/types.h>
+#include<unistd.h>
+
+int main() {
+    FILE *fptr1, *fptr2;
+    char filename1[20], filename2[20];
+    char c;
+
+    // Prompt user to enter the name of the file to be read
+    printf("Enter the name of the file to read: ");
+    scanf("%s", filename1);
+
+    // Open the file for reading
+    fptr1 = fopen(filename1, "r");
+    if (fptr1 == NULL) {
+        printf("Error opening the file %s\n", filename1);
+        return 1;
+    }
+
+    // Prompt user to enter the name of the file to write to
+    printf("Enter the name of the file to write: ");
+    scanf("%s", filename2);
+
+    // Open the file for writing
+    fptr2 = fopen(filename2, "w");
+    if (fptr2 == NULL) {
+        printf("Error opening the file %s\n", filename2);
+        return 1;
+    }
+
+    // Copy content from file1 to file2 character by character
+    c = fgetc(fptr1);
+    while (c != EOF) {
+        fputc(c, fptr2);
+        c = fgetc(fptr1);
+    }
+
+    // Close both files
+    fclose(fptr1);
+    fclose(fptr2);
+
+    // Print message indicating successful copy
+    printf("Content copied successfully.\n");
+    return 0;
+}
+
+
+
+
+      mygrep.c
+
+#include<stdio.h>
+#include<string.h> // Include string.h for strstr() function
+#include<unistd.h>
+
+int main()
+{
+    FILE *fn;
+    char filename[20], pat[20], temp[200]; // Declare variables to store filename, pattern, and temporary string
+    printf("Enter the filename: ");
+    scanf("%s", filename); // Read filename from user input
+    
+    printf("Enter the pattern to search: ");
+    scanf("%s", pat); // Read search pattern from user input
+
+    fn = fopen(filename, "r"); // Open the file in read mode
+
+    if (fn == NULL) { // Check if file opening failed
+        perror("Error opening file"); // Print error message
+        return 1; // Exit with failure
+    }
+
+    // Read lines from file until EOF
+    while(fgets(temp, 200, fn) != NULL) // Loop until fgets returns NULL, indicating EOF
+    {
+        if(strstr(temp, pat) != NULL) // Check if pattern is found in the current line
+        {
+            printf("Pattern found: %s\n", temp); // Print the line containing the pattern
+        }
+    }
+
+    fclose(fn); // Close the file
+    return 0; // Exit with success
+}
 
 // 2.SCHEDULING ALGORITHMS ---------------------------------------------------------------------------
 
